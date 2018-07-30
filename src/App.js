@@ -78,7 +78,8 @@ class Filter extends Component{
     return (
       <div style={defaultStyle}>
       <img/>
-      <input type="text"/>
+      <input type="text" onKeyDown={event => 
+        this.props.onTextChange(event.target.value)}/>
       <img/>
       </div>
     );
@@ -134,7 +135,10 @@ componentDidMount() {
         </h3>
       <PlaylistCounter playlists={this.state.serverData.user.playlists}/>
       <DurationCounter playlists={this.state.serverData.user.playlists}/>
-      <Filter/>
+      <Filter onTextChange={text => {
+        console.log(text);
+        this.setState({filterString: text})
+      }}/>
       {this.state.serverData.user.playlists.filter(playlist =>
         playlist.name.toLowerCase().includes(this.state.filterString)
       ).map(playlist =>
