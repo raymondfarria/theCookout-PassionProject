@@ -106,7 +106,9 @@ class Playlist extends Component{
 class App extends Component {
   constructor(){
     super();
-    this.state = {serverData: {}}
+    this.state = {serverData: {},
+    filterString: ''
+    }
   }
 componentDidMount() {
   setTimeout(() => {
@@ -133,7 +135,9 @@ componentDidMount() {
       <PlaylistCounter playlists={this.state.serverData.user.playlists}/>
       <DurationCounter playlists={this.state.serverData.user.playlists}/>
       <Filter/>
-      {this.state.serverData.user.playlists.map(playlist =>
+      {this.state.serverData.user.playlists.filter(playlist =>
+        playlist.name.toLowerCase().includes(this.state.filterString)
+      ).map(playlist =>
         <Playlist playlist={playlist}/>
       )}
       </div> : <h1 style={defaultStyle}>Loading...</h1>
