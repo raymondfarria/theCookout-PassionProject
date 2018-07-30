@@ -117,12 +117,10 @@ componentDidMount() {
   }, 100)
 }
   render() {
-    let playlistElements = []
-    if(this.state.serverData.user){
-    this.state.serverData.user.playlists.forEach(playlist =>
-      playlistElements.push(<Playlist playlist ={playlist} />)
-    )
-  }
+    let playlistToRender = this.state.serverData.user ? this.state.serverData.user.playlists.filter(playlist =>
+      playlist.name.toLowerCase().includes(
+        this.state.filterString.toLowerCase())
+    ) : []
 
     return (
       <div className="App">
@@ -133,15 +131,13 @@ componentDidMount() {
         <h3 style={{color: textColor}}>
         {this.state.serverData.user.name}'s Playlists
         </h3>
-      <PlaylistCounter playlists={this.state.serverData.user.playlists}/>
-      <DurationCounter playlists={this.state.serverData.user.playlists}/>
+      <PlaylistCounter playlists={playlistToRender}/>
+      <DurationCounter playlists={playlistToRender}/>
       <Filter onTextChange={text => {
         console.log(text);
         this.setState({filterString: text})
       }}/>
-      {this.state.serverData.user.playlists.filter(playlist =>
-        playlist.name.toLowerCase().includes(this.state.filterString)
-      ).map(playlist =>
+      {playlistToRender.map(playlist =>
         <Playlist playlist={playlist}/>
       )}
       </div> : <h1 style={defaultStyle}>Loading...</h1>
