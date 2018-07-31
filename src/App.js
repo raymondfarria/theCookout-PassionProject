@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
 import './App.css';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import queryString from 'query-string';
+import 'typeface-roboto';
 
 let textColor = 'darkgoldenrod'
 let defaultStyle = {
   color: textColor,
 }
+
 let fakeServerData = {
   user: {
     name: 'Raymond',
@@ -16,33 +21,9 @@ let fakeServerData = {
           {name:'Best I Ever Had', duration: 3183}, 
           {name: 'Hotline Bling', duration: 3880}
         ] 
-      },
-      {
-        name: 'Discover',
-        songs: [
-          {name: 'Baby Please!!!', duration: 888}, 
-          {name: 'Dont Go', duration: 2666}, 
-          {name: 'IDK What To Do', duration: 2983}
-        ]
-      },
-      {
-        name: 'New Playlists',
-        songs: [
-          {name: 'I Like Noodles', duration: 1212}, 
-          {name: 'I Kinda Like Noodles', duration: 4692}, 
-          {name: 'Noodle Me Up', duration: 2000}
-        ]
-      },
-      {
-        name: 'Friends Playlists',
-        songs: [
-          {name: 'I Like Cake', duration: 2000}, 
-          {name: 'Cake Is My Friend', duration: 1500}, 
-          {name: 'Cake Makes Me Fat', duration: 7000}
-      ]
       }
     ]
-  },
+  }
 
 }
 
@@ -111,37 +92,63 @@ class App extends Component {
     filterString: ''
     }
   }
-componentDidMount() {
-  setTimeout(() => {
-  this.setState({serverData: fakeServerData});
-  }, 100)
-}
+  componentDidMount(){
+    const parsed = queryString.parse(window.location.search);
+    let accessToken = parsed.access_token;
+
+    //Fetches access token for the api
+    fetch('https://api.spotify.com/v1/me', {
+      headers: {'Authorization': 'Bearer ' + accessToken}
+    }).then(response => response.json())
+    .then(data => this.setState({serverData: {user: {name: data.id}}}))
+    
+    //Fetches playlists of the current user
+    fetch('https://api.spotify.com/v1/me/playlists', {
+      headers: {'Authorization': 'Bearer ' + accessToken}
+    }).then(response => response.json())
+    .then(data => this.setState({
+        playlists: data.items.map(item => ({
+          name: item.name,
+          songs: []
+      }))
+    }))
+    
+  }
   render() {
-    let playlistToRender = this.state.serverData.user ? this.state.serverData.user.playlists.filter(playlist =>
-      playlist.name.toLowerCase().includes(
-        this.state.filterString.toLowerCase())
-    ) : []
+    let playlistToRender = 
+    this.state.serverData.user && 
+    this.state.playlists 
+      ? this.state.playlists.filter(playlist =>
+        playlist.name.toLowerCase().includes(
+          this.state.filterString.toLowerCase())) 
+      : []
+
+    
 
     return (
       <div className="App">
-      <h1 class="title">The Cookout
-      </h1>
-      {this.state.serverData.user ?
+        <Typography variant='display1' align='center' gutterBottom>
+          The Cookout
+        </Typography>
+          {this.state.serverData.user ?
         <div> 
-        <h3 style={{color: textColor}}>
-        {this.state.serverData.user.name}'s Playlists
-        </h3>
-      <PlaylistCounter playlists={playlistToRender}/>
-      <DurationCounter playlists={playlistToRender}/>
-      <Filter onTextChange={text => {
-        console.log(text);
-        this.setState({filterString: text})
-      }}/>
-      {playlistToRender.map(playlist =>
-        <Playlist playlist={playlist}/>
-      )}
-      </div> : <h1 style={defaultStyle}>Loading...</h1>
-      }
+          <h3 style={{color: textColor}}>
+          {this.state.serverData.user.name}'s Playlists
+          </h3>
+          <PlaylistCounter playlists={playlistToRender}/>
+          {/*<DurationCounter playlists={playlistToRender}/>*/}
+          <Filter onTextChange={text => {             
+             console.log(text);
+             this.setState({filterString: text})
+            }}/>
+              {playlistToRender.map(playlist =>
+          <Playlist playlist={playlist}/>
+            )}
+        </div> : <Button onClick={()=> window.location= 'http://localhost:8888/login'}
+        variant="raised" color= 'primary'>
+        Sign in with Spotify
+        </Button>
+        }
       </div>
     );
   }
