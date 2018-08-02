@@ -163,7 +163,7 @@ class App extends Component {
         </div> : <Button onClick={()=> {
           window.location = window.location.href.includes('localhost') 
           ? 'http://localhost:8888/login' 
-          : 'https://thecookout-passionproject.herokuapp.com/login'}
+          : 'https://backendcookout.herokuapp.com/login'}
         }
         variant="raised" color= 'primary'>
         Sign in with Spotify
