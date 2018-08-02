@@ -99,7 +99,8 @@ class App extends Component {
      console.log(parsed);
      console.log(parsed["?access_token"])
      let accessToken = parsed["?access_token"];
-      
+     
+     //Checks to see if access token is still valid. Prompts sign in button if not. 
      if(!accessToken)
       return; 
 
@@ -159,7 +160,11 @@ class App extends Component {
               {playlistToRender.map(playlist =>
           <Playlist playlist={playlist}/>
             )}
-        </div> : <Button onClick={()=> window.location= 'http://localhost:8888/login'}
+        </div> : <Button onClick={()=> {
+          window.location = window.location.includes('localhost') 
+          ? 'http://localhost:8888/login' 
+          : 'https://thecookout-passionproject.herokuapp.com/login'}
+        }
         variant="raised" color= 'primary'>
         Sign in with Spotify
         </Button>
