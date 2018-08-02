@@ -2,14 +2,16 @@ import React, { Component } from 'react';
 import './App.css';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import queryString from 'query-string';
 import 'typeface-roboto';
+import qs from 'qs';
+import queryString from 'query-string';
+
 
 let textColor = 'darkgoldenrod'
 let defaultStyle = {
   color: textColor,
 }
-
+// const querystring = require('querystring');
 let fakeServerData = {
   user: {
     name: 'Raymond',
@@ -93,21 +95,23 @@ class App extends Component {
     }
   }
   componentDidMount(){
-    const parsed = queryString.parse(window.location.search);
-    let accessToken = parsed.access_token;
+     let parsed = queryString.parse(window.location.search);
+     let accessToken = parsed.access_token;
+    //is const axios = require('axios');
 
     //Fetches access token for the api
-    fetch('https://api.spotify.com/v1/me', {
-      headers: {'Authorization': 'Bearer ' + accessToken}
-    }).then(response => response.json())
-    .then(data => this.setState({serverData: {user: {name: data.id}}}))
+      
+      fetch('https://api.spotify.com/v1/me', {
+       headers: {'Authorization': 'Bearer ' + accessToken}
+     }).then(response => response.json())
+     .then(data => this.setState({serverData: {user: {name: data.id}}}))
     
     //Fetches playlists of the current user
     fetch('https://api.spotify.com/v1/me/playlists', {
       headers: {'Authorization': 'Bearer ' + accessToken}
     }).then(response => response.json())
     .then(data => this.setState({
-        playlists: data.items.map(item => ({
+        playlists: (data.items || []).map(item => ({
           name: item.name,
           songs: []
       }))
@@ -116,7 +120,7 @@ class App extends Component {
   }
   render() {
     let playlistToRender = 
-    this.state.serverData.user && 
+    this.state.user && 
     this.state.playlists 
       ? this.state.playlists.filter(playlist =>
         playlist.name.toLowerCase().includes(
