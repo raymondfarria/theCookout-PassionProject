@@ -99,7 +99,9 @@ class App extends Component {
      console.log(parsed);
      console.log(parsed["?access_token"])
      let accessToken = parsed["?access_token"];
-    //is const axios = require('axios');
+      
+     if(!accessToken)
+      return; 
 
     //Fetches access token for the api
     fetch('https://api.spotify.com/v1/me', {
