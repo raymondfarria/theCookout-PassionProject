@@ -3,8 +3,8 @@ import './App.css';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import 'typeface-roboto';
-import qs from 'qs';
-import queryString from 'query-string';
+// import qs from 'qs';
+import queryString from 'qs';
 
 
 let textColor = 'darkgoldenrod'
@@ -74,7 +74,7 @@ class Playlist extends Component{
     let playlist = this.props.playlist;
     return(
       <div style={{...defaultStyle, width: "25%", display: 'inline-block'}}>
-       <img/>
+       <img src= {playlist.imageUrl} style = {{width: '160px'}}/>
        <h3>{playlist.name}</h3>
        <ul>
        {playlist.songs.map(song => 
@@ -96,25 +96,34 @@ class App extends Component {
   }
   componentDidMount(){
      let parsed = queryString.parse(window.location.search);
-     let accessToken = parsed.access_token;
+     console.log(parsed);
+     console.log(parsed["?access_token"])
+     let accessToken = parsed["?access_token"];
     //is const axios = require('axios');
 
     //Fetches access token for the api
-      
-      fetch('https://api.spotify.com/v1/me', {
+    fetch('https://api.spotify.com/v1/me', {
        headers: {'Authorization': 'Bearer ' + accessToken}
      }).then(response => response.json())
-     .then(data => this.setState({serverData: {user: {name: data.id}}}))
+     .then(data => this.setState({
+       user: {
+         name: data.id
+       }
+      }))
     
     //Fetches playlists of the current user
     fetch('https://api.spotify.com/v1/me/playlists', {
       headers: {'Authorization': 'Bearer ' + accessToken}
     }).then(response => response.json())
     .then(data => this.setState({
-        playlists: (data.items || []).map(item => ({
+        playlists: data.items.map(item => {
+          console.log(data.items)
+          return {
           name: item.name,
+          imageUrl: item.images[0].url,
           songs: []
-      }))
+          }
+      })
     }))
     
   }
@@ -134,13 +143,13 @@ class App extends Component {
         <Typography variant='display1' align='center' gutterBottom>
           The Cookout
         </Typography>
-          {this.state.serverData.user ?
+          {this.state.user ?
         <div> 
           <h3 style={{color: textColor}}>
-          {this.state.serverData.user.name}'s Playlists
+          {this.state.user.name}'s Playlists
           </h3>
           <PlaylistCounter playlists={playlistToRender}/>
-          {/*<DurationCounter playlists={playlistToRender}/>*/}
+          <DurationCounter playlists={playlistToRender}/>
           <Filter onTextChange={text => {             
              console.log(text);
              this.setState({filterString: text})
