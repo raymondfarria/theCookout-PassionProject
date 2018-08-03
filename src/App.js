@@ -3,31 +3,17 @@ import './App.css';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import 'typeface-roboto';
-// import qs from 'qs';
 import queryString from 'qs';
+import "@material/card/mdc-card";
 
 
-let textColor = 'darkgoldenrod'
+
+let textColor = 'grey'
 let defaultStyle = {
   color: textColor,
 }
-// const querystring = require('querystring');
-let fakeServerData = {
-  user: {
-    name: 'Raymond',
-    playlists: [
-      {
-        name: 'My Favorites',
-        songs: [
-          {name: 'In My Feelings', duration: 1245}, 
-          {name:'Best I Ever Had', duration: 3183}, 
-          {name: 'Hotline Bling', duration: 3880}
-        ] 
-      }
-    ]
-  }
 
-}
+
 
 class PlaylistCounter extends Component{
   render() {
@@ -75,13 +61,15 @@ class Playlist extends Component{
     return(
       <div style={{...defaultStyle, width: "25%", display: 'inline-block'}}>
        <img src= {playlist.imageUrl} style = {{width: '160px'}}/>
+       <Typography variant='Headline' align='center' gutterBottom>
        <h3>{playlist.name}</h3>
+       </Typography>
        <ul>
        {playlist.songs.map(song => 
         <li>{song.name}</li>
       )}
        </ul>
-      </div>
+       </div>
     );
   }
 }
@@ -159,10 +147,13 @@ class App extends Component {
     let playlistToRender = 
     this.state.user && 
     this.state.playlists 
-      ? this.state.playlists.filter(playlist =>
-        playlist.name.toLowerCase().includes(
-          this.state.filterString.toLowerCase())) 
-      : []
+      ? this.state.playlists.filter(playlist =>{
+        let matchesPlaylist = playlist.name.toLowerCase().includes(
+          this.state.filterString.toLowerCase())
+          let matchesSong = playlist.songs.find(song => song.name.toLowerCase()
+          .includes(this.state.filterString.toLowerCase()))
+          return matchesPlaylist || matchesSong
+        }) : []
 
     
 
@@ -173,18 +164,22 @@ class App extends Component {
         </Typography>
           {this.state.user ?
         <div> 
+          <Typography variant='Title' >
           <h3 style={{color: textColor}}>
           {this.state.user.name}'s Playlists
           </h3>
+          </Typography>
           <PlaylistCounter playlists={playlistToRender}/>
           <DurationCounter playlists={playlistToRender}/>
           <Filter onTextChange={text => {             
              console.log(text);
              this.setState({filterString: text})
               }}/>
+              
             {playlistToRender.map(playlist =>
           <Playlist playlist={playlist}/>
             )}
+
         </div> : <Button onClick={()=> {
           window.location = window.location.href.includes('localhost') 
           ? 'http://localhost:8888/login' 

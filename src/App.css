@@ -29,10 +29,12 @@
 
 h1 {
   font-size: 54px;
-  color: darkgoldenrod
+  color: grey;
 }
 
 h2 {
   font-size: 35px;
-  color: darkgoldenrod
+  color: grey;
+  font-family: 'Roboto', sans-serif, 
 }
+
