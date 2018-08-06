@@ -1,29 +1,51 @@
 {
-  "name": "thecookout-passionproject",
-  "version": "1.0.0",
-  "description": "This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).",
-  "main": "index.js",
+  "name": "thecookoutfrontend",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
+    "@material-ui/core": "^1.4.2",
+    "@material/card": "^0.38.0",
+    "@material/typography": "^0.38.0",
     "ajv": "^6.5.2",
-    "gulp": "^4.0.0",
+    "bloomer": "^0.6.3",
+    "bulma": "^0.7.1",
+    "bulma-extensions": "^2.2.1",
     "hoek": "^5.0.3",
+    "moment": "^2.22.2",
     "nice-react-layout": "^0.6.5",
+    "node-sass-chokidar": "^1.3.3",
+    "npm-run-all": "^4.1.3",
+    "qs": "^6.5.2",
     "react": "^16.4.2",
     "react-autosuggest": "^9.3.4",
     "react-burger-menu": "^2.5.2",
     "react-dom": "^16.4.2",
+    "react-ga": "^2.5.3",
+    "react-helmet": "^5.2.0",
     "react-router": "^4.3.1",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "1.1.4",
     "react-transition-group": "^2.4.0",
+    "request": "^2.87.0",
     "spotify-sdk": "^1.0.0-beta2",
-    "typeface-roboto": "^0.0.54",
-    "webpack-dev-server": "^2.11.2"
+    "styled-components": "^3.3.3",
+    "typeface-roboto": "^0.0.54"
   },
   "devDependencies": {
-    "eslint": "^5.2.0",
-    "webpack": "^3.12.0"
+    "eslint": "^5.3.0",
+    "gulp": "^4.0.0",
+    "webpack": "^3.12.0",
+    "webpack-dev-server": "^2.11.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-css": "node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/",
+    "watch-css": "npm run build-css && node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/ --watch --recursive",
+    "start-js": "react-scripts start",
+    "start": "npm-run-all -p watch-css start-js",
+    "build-js": "react-scripts build",
+    "build": "npm-run-all build-css build-js",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   },
   "repository": {
     "type": "git",
