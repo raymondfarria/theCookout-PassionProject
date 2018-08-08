@@ -1,119 +1,165 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { fetchUser } from './Actions/userActions';
+import { setToken } from './Actions/tokenAction';
+import { playSong, stopSong, pauseSong, resumeSong } from './Actions/songActions';
 import './App.css';
-import Menu from './Components/Menu';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import queryString from 'qs';
-import BurgerMenu from 'react-burger-menu';
-import Search from './Pages/Search';
-import Home from './Pages/Home';
-import Login from './Components/Login';
-import {Route,NavLink,HashRouter} from "react-router-dom";
-import {Switch} from 'react-router-dom';
 
-
-let styles = {
-  bmBurgerButton: {
-    position: 'fixed',
-    width: '36px',
-    height: '30px',
-    left: '36px',
-    top: '36px'
-  },
-  bmBurgerBars: {
-    background: '#373a47'
-  },
-  bmCrossButton: {
-    height: '24px',
-    width: '24px'
-  },
-  bmCross: {
-    background: '#bdc3c7'
-  },
-  bmMenu: {
-    background: '#373a47',
-    padding: '2.5em 1.5em 0',
-    fontSize: '1.15em'
-  },
-  bmMorphShape: {
-    fill: '#373a47'
-  },
-  bmItemList: {
-    color: '#b8b7ad',
-    padding: '0.8em'
-  },
-  bmItem:{
-    display: 'block',
-    fontSize: '30px',
-    padding: '10px'
-  },
-  bmOverlay: {
-    background: 'rgba(0, 0, 0, 0.3)'
-  }
-}
-
-const routes = [
-  {
-    path:'/login',
-    component: Home
-  },
-  {
-    path:'/search',
-    component:Search
-  }
-]
+import Header from './Components/Header';
+import Footer from './Components/Footer';
+import UserPlaylists from './Components/UserPlaylists';
+import HomePage from './Components/HomePage';
+import ArtWork from './Components/Artwork';
+import HomeHeader from './Components/HomeHeader';
+import SideMenu from './Components/SideMenu';
 
 
 class App extends Component {
-  
-  componentDidMount(){
-    let parsed = queryString.parse(window.location.search);
-    console.log(parsed);
-    console.log(parsed["?access_token"])
-    let accessToken = parsed["?access_token"];
-    
-    //Checks to see if access token is still valid. Prompts sign in button if not. 
-    if(!accessToken)
-     return; 
 
-   //Fetches access token for the api
-   fetch('https://api.spotify.com/v1/me', {
-      headers: {'Authorization': 'Bearer ' + accessToken}
-    }).then(response => response.json())
-    .then(data => this.setState({
-      user: {
-        name: data.id
-      }
-     }))
-    }
-  
-  
-  render() {
-    return (
-      <div>
-      <Typography variant='display1' align='center' gutterBottom>
-        The Cookout
-      </Typography>
-      <div>
-      <Menu/>
-      </div>
-      </div>
-      
-    );
-      }
-    }
-    
+	static audio;
 
+	componentDidMount() {
 
-          
+	  let hashParams = {};
+	  let e, r = /([^&;=]+)=?([^&;]*)/g,
+	    q = window.location.hash.substring(1);
+	  while ( e = r.exec(q)) {
+	    hashParams[e[1]] = decodeURIComponent(e[2]);
+	  }
 
-    
-    export default App;
-      
-         
-        
-       
-          
+	  if(!hashParams.access_token) {
+	    window.location.href = 'https://accounts.spotify.com/authorize?client_id=4932d6cfd1af470ca5412a89bdf11ca1&scope=playlist-read-private%20playlist-read-collaborative%20playlist-modify-public%20user-read-recently-played%20playlist-modify-private%20ugc-image-upload%20user-follow-modify%20user-follow-read%20user-library-read%20user-library-modify%20user-read-private%20user-read-email%20user-top-read%20user-read-playback-state&response_type=token&redirect_uri=http://localhost:3000/callback';
+	  } else {
+	    this.props.setToken(hashParams.access_token);
+	  }
 
-    
+	}
 
+	componentWillReceiveProps(nextProps) {
+	  if(nextProps.token) {
+	    this.props.fetchUser(nextProps.token);
+	  };
+
+	  if(this.audio !== undefined) {
+	    this.audio.volume = nextProps.volume / 100;
+	  }
+
+	}
+
+	stopSong = () => {
+	  if(this.audio) {
+	    this.props.stopSong();
+	    this.audio.pause();
+	  }
+	}
+
+	pauseSong = () => {
+	  if(this.audio) {
+	    this.props.pauseSong();
+	    this.audio.pause();
+	  }
+	}
+
+	resumeSong = () => {
+	  if(this.audio) {
+	    this.props.resumeSong();
+	    this.audio.play();
+	  }
+	}
+
+	audioControl = (song) => {
+
+	  const { playSong, stopSong } = this.props;
+
+	  if(this.audio === undefined){
+	    playSong(song.track);
+	    this.audio = new Audio(song.track.preview_url);
+	    this.audio.play();
+	  } else {
+	    stopSong();
+	    this.audio.pause();
+	    playSong(song.track);
+	    this.audio = new Audio(song.track.preview_url);
+	    this.audio.play();
+	  }
+	}
+
+	render() {
+	  return (
+			<div 
+    className="single_slide" 
+    style={{backgroundImage: 'url(./Images/8b8816979d0d23ed0b8d654037fa064f copy.png)'}}
+>
+	    <div className='App' >
+	      <div className='app-container'>
+
+	        <div className='left-side-section'>
+	          <SideMenu />
+	          <UserPlaylists />
+	          <ArtWork />
+	        </div>
+
+	        <div className='main-section' >
+	          <Header />
+	          <div className='main-section-container'>
+	            <HomeHeader
+	              pauseSong={ this.pauseSong }
+	              resumeSong={ this.resumeSong }
+	            />
+	            <HomePage
+	              pauseSong={this.pauseSong}
+	              resumeSong={ this.resumeSong }
+	              audioControl={ this.audioControl }
+	            />
+	          </div>
+	        </div>
+
+	        <Footer
+	          stopSong={ this.stopSong }
+	          pauseSong={ this.pauseSong }
+	          resumeSong={ this.resumeSong }
+	          audioControl={ this.audioControl }
+	        />
+	      </div>
+			</div>
+			</div>
+	  );
+	}
+}
+
+App.propTypes = {
+  token: PropTypes.string,
+  fetchUser: PropTypes.func,
+  setToken: PropTypes.func,
+  pauseSong: PropTypes.func,
+  playSong: PropTypes.func,
+  stopSong: PropTypes.func,
+  resumeSong: PropTypes.func,
+  volume: PropTypes.number
+};
+
+const mapStateToProps = (state) => {
+
+  return {
+    token: state.tokenReducer.token,
+    volume: state.soundReducer.volume
+  };
+
+};
+
+const mapDispatchToProps = dispatch => {
+
+  return bindActionCreators({
+    fetchUser,
+    setToken,
+    playSong,
+    stopSong,
+    pauseSong,
+    resumeSong
+  },dispatch);
+
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);

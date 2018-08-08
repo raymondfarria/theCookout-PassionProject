@@ -1,108 +1,94 @@
-'use strict';
+import uniqBy from 'lodash/uniqBy';
 
-import Dispatcher from '../dispatcher';
-import {
-    PLAYLIST_ADD_TRACKS,
-    PLAYLIST_REMOVE_TRACK,
-    PLAYLIST_LOADING,
-    PLAYLIST_REMOVE_TRACKS,
-    PLAYLIST_CREATED,
-    PLAYLIST_SAVING,
-    USER_TOKEN_ERROR,
-    PLAYLIST_TRACK_NOT_FOUND,
-    PLAYLIST_SAVE_FAIL,
-    PLAYLIST_LIMIT_429,
-    SEARCH_RESET,
-    PLAYLIST_FAILED
-} from '../Constants/constants.js';
-import Spotify from '../Spotify';
-import {login} from './userActions';
-
-let PlaylistActions = {
-
-    search: (text, country) => {
-      Dispatcher.dispatch({
-        type: PLAYLIST_LOADING
-      });
-      Spotify.search(text, country, (tracks, mainTrack) => {
-        if (tracks.length) {
-          Dispatcher.dispatch({
-            type: PLAYLIST_ADD_TRACKS,
-            tracks: tracks,
-            mainTrack: mainTrack
-          });
-          ga('send', 'event', 'event', 'new-playlist', 'new');
-        } else {
-          Dispatcher.dispatch({
-            type: PLAYLIST_TRACK_NOT_FOUND,
-            tracks: []
-          });
-          ga('send', 'event', 'event', 'playlist-search', 'no-result');
-        }
-      }, (error) => {
-        ga('send', 'event', 'event', 'new-api-error', error.response.status);
-        if (error.response.status === 429) {
-          Dispatcher.dispatch({
-            type: PLAYLIST_LIMIT_429,
-            tracks: []
-          });
-          ga('send', 'event', 'event', 'playlist-search', '429');
-        } else if (error.response.status === 401) {
-          Dispatcher.dispatch({
-            type: PLAYLIST_LIMIT_429,
-            tracks: []
-          });
-          ga('send', 'event', 'event', 'playlist-search', '401');
-        } else {
-          Dispatcher.dispatch({
-            type: PLAYLIST_FAILED
-          });
-          ga('send', 'event', 'event', 'playlist-search', 'error');
-        }
-        Dispatcher.dispatch({
-          type: SEARCH_RESET
-        });
-      });
-    },
-  
-    removeTracks: () => {
-      Dispatcher.dispatch({
-        type: PLAYLIST_REMOVE_TRACKS
-      });
-    },
-  
-    removeTrack: (index) => {
-      Dispatcher.dispatch({
-        type: PLAYLIST_REMOVE_TRACK,
-        index: index
-      });
-    },
-  
-    save: (userId, name, isPublic, tracks) => {
-      Dispatcher.dispatch({
-        type: PLAYLIST_SAVING
-      });
-      Spotify.savePlaylist(userId, name, isPublic, tracks).then((response) => {
-        Dispatcher.dispatch({
-          type: PLAYLIST_CREATED,
-          response: response
-        });
-        ga('send', 'event', 'event', 'playlist-save', 'saved');
-      }).catch((error) => {
-        if (error.response.status === 401) {
-          ga('send', 'event', 'event', 'playlist-save', 'token error');
-          login().then(() => {
-            PlaylistActions.save(userId, name, isPublic, tracks);
-          });
-        } else {
-          Dispatcher.dispatch({
-            type: PLAYLIST_SAVE_FAIL
-          });
-          ga('send', 'event', 'event', 'playlist-save', 'error');
-        }
-      });
-    }
-  
+export const fetchPlaylistMenuPending = () => {
+  return {
+    type: 'FETCH_PLAYLIST_MENU_PENDING'
   };
-  
-  export default PlaylistActions;
+};
+
+export const fetchPlaylistMenuSuccess = (playlists) => {
+  return {
+    type: 'FETCH_PLAYLIST_MENU_SUCCESS',
+    playlists
+  };
+};
+
+export const fetchPlaylistMenuError = () => {
+  return {
+    type: 'FETCH_PLAYLIST_MENU_ERROR'
+  };
+};
+
+export const addPlaylistItem = (playlist) => {
+  return {
+    type: 'ADD_PLAYLIST_ITEM',
+    playlist
+  };
+};
+
+export const fetchPlaylistsMenu = (userId, accessToken) => {
+  return dispatch => {
+    const request = new Request(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+      headers: new Headers({
+        'Authorization': 'Bearer ' + accessToken
+      })
+    });
+
+    dispatch(fetchPlaylistMenuPending());
+
+    fetch(request).then(res => {
+      if(res.statusText === "Unauthorized") {
+        window.location.href = './';
+      }
+      return res.json();
+    }).then(res => {
+      dispatch(fetchPlaylistMenuSuccess(res.items));
+    }).catch(err => {
+      dispatch(fetchPlaylistMenuError(err));
+    });
+  };
+};
+
+
+export const fetchPlaylistSongsPending = () => {
+  return {
+    type: 'FETCH_PLAYLIST_SONGS_PENDING'
+  };
+};
+
+export const fetchPlaylistSongsSuccess = (songs) => {
+  return {
+    type: 'FETCH_PLAYLIST_SONGS_SUCCESS',
+    songs
+  };
+};
+
+export const fetchPlaylistSongsError = () => {
+  return {
+    type: 'FETCH_PLAYLIST_SONGS_ERROR'
+  };
+};
+
+export const fetchPlaylistSongs = (userId, playlistId, accessToken) => {
+  return dispatch => {
+    const request = new Request(`https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`, {
+      headers: new Headers({
+        'Authorization': 'Bearer ' + accessToken
+      })
+    });
+
+    dispatch(fetchPlaylistSongsPending());
+
+    fetch(request).then(res => {
+      return res.json();
+    }).then(res => {
+      //remove duplicate tracks
+      res.items = uniqBy(res.items, (item) => {
+        return item.track.id;
+      });
+      dispatch(fetchPlaylistSongsSuccess(res.items));
+    }).catch(err => {
+      dispatch(fetchPlaylistSongsError(err));
+    });
+  };
+};
